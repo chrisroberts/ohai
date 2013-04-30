@@ -93,6 +93,17 @@ rescue Ohai::Exceptions::Exec
   Ohai::Log.debug("Unable to find xenstore-ls, cannot capture region information for Rackspace cloud")
 end
 
+# Get node instance id
+#
+def get_instance_id
+  status, stdout, stderr = run_command(:no_status_check => true, :command => "xenstore-read `xenstore-read vm`/name")
+  if status == 0
+    rackspace[:instance_id] = stdout.strip.sub('instance-', '')
+  end
+rescue Ohai::Exceptions::Exec
+  Ohai::Log.debug("Unable to find xenstore-read, cannot capture instance id information for Rackspace node")
+end
+
 # Adds rackspace Mash
 if looks_like_rackspace?
   rackspace Mash.new
@@ -106,4 +117,5 @@ if looks_like_rackspace?
   rackspace[:local_ipv4] = rackspace[:private_ip]
   get_global_ipv6_address(:local_ipv6, :eth1)
   rackspace[:local_hostname] = hostname
+  get_instance_id
 end
